@@ -1,8 +1,21 @@
-jinja2             # For HTML dashboard templating
-pyyaml             # For reading config/settings.yaml
-requests           # For making HTTP requests in scanners
-bandit             # For SAST (static code analysis)
-python-nmap        # If you want to run network scanning from Python
-pytest             # Optional, for testing your modules
-tqdm               # Optional, for progress bars during scans
-
+bandit==1.8.6
+certifi==2025.10.5
+charset-normalizer==3.4.3
+colorama==0.4.6
+idna==3.10
+iniconfig==2.1.0
+Jinja2==3.1.6
+markdown-it-py==4.0.0
+MarkupSafe==3.0.3
+mdurl==0.1.2
+packaging==25.0
+pluggy==1.6.0
+Pygments==2.19.2
+pytest==8.4.2
+python-nmap==0.7.1
+PyYAML==6.0.3
+requests==2.32.5
+rich==14.1.0
+stevedore==5.5.0
+tqdm==4.67.1
+urllib3==2.5.0

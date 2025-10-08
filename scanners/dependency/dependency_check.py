@@ -1,8 +1,20 @@
+import subprocess
+import json
+
 def run(target_url):
     """
-    Stub for dependency vulnerability scanning.
-    Uses the passed target_url parameter if needed.
+    Run Safety to check Python dependencies for known vulnerabilities.
+    Assumes a requirements.txt exists in target_url folder.
     """
     print(f"[Dependency] Checking dependencies for {target_url}...")
-    # TODO: Implement dependency scanning (or scan project files)
-    return {"vulnerable_libraries": [], "summary": f"Dependency check completed (stub) for {target_url}"}
+    try:
+        result = subprocess.run(
+            ["safety", "check", "--json", "--file", f"{target_url}/requirements.txt"],
+            capture_output=True, text=True, check=True
+        )
+        data = json.loads(result.stdout) if result.stdout else []
+        summary = f"Safety found {len(data)} vulnerabilities."
+        return {"vulnerabilities": data, "summary": summary}
+    except Exception as e:
+        return {"vulnerabilities": [], "summary": f"Safety scan failed: {e}"}
+

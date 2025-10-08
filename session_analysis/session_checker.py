@@ -1,8 +1,15 @@
+import requests
+
 def run(target_url):
-    """
-    Stub for session analysis (JWT, cookies, CSRF)
-    Uses the passed target_url parameter.
-    """
     print(f"[Session] Checking session management for {target_url}...")
-    # TODO: Implement JWT validation, cookie flags, CSRF checks
-    return {"session_issues": [], "summary": f"Session check completed (stub) on {target_url}"}
+    try:
+        r = requests.get(target_url)
+        cookies = r.cookies
+        cookie_info = {
+            c.name: {"secure": c.secure, "httponly": c.has_nonstandard_attr('HttpOnly')}
+            for c in cookies
+        }
+    except Exception as e:
+        cookie_info = {"error": str(e)}
+    return cookie_info
+

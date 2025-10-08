@@ -148,5 +148,68 @@
                 "summary": "Session check completed (stub) on https://testphp.vulnweb.com"
             }
         }
+    },
+    {
+        "timestamp": "2025-10-08T12:21:35.111072",
+        "results": {
+            "sast": {
+                "vulnerabilities": [],
+                "summary": "Bandit scan completed (stub) on https://testphp.vulnweb.com"
+            },
+            "dast": {
+                "vulnerabilities": [],
+                "summary": "ZAP scan completed (stub) on https://testphp.vulnweb.com"
+            },
+            "api_fuzz": {
+                "vulnerabilities": [],
+                "summary": "API fuzzing completed (stub) on https://testphp.vulnweb.com"
+            },
+            "dependency": {
+                "vulnerable_libraries": [],
+                "summary": "Dependency check completed (stub) for https://testphp.vulnweb.com"
+            },
+            "session": {
+                "session_issues": [],
+                "summary": "Session check completed (stub) on https://testphp.vulnweb.com"
+            }
+        }
+    },
+    {
+        "timestamp": "2025-10-08T12:58:21.772245",
+        "results": {
+            "sast": {
+                "vulnerabilities": [],
+                "summary": "Bandit found 0 issues."
+            },
+            "dast": {
+                "alerts": [],
+                "summary": "ZAP scan completed on https://testphp.vulnweb.com"
+            },
+            "api_fuzz": {
+                "summary": "3 items found",
+                "details": [
+                    {
+                        "endpoint": "/login",
+                        "error": "HTTPSConnectionPool(host='testphp.vulnweb.com', port=443): Max retries exceeded with url: /login (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0x7f13c2bdeed0>, 'Connection to testphp.vulnweb.com timed out. (connect timeout=5)'))"
+                    },
+                    {
+                        "endpoint": "/register",
+                        "error": "HTTPSConnectionPool(host='testphp.vulnweb.com', port=443): Max retries exceeded with url: /register (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0x7f13c2bdf3e0>, 'Connection to testphp.vulnweb.com timed out. (connect timeout=5)'))"
+                    },
+                    {
+                        "endpoint": "/search",
+                        "error": "HTTPSConnectionPool(host='testphp.vulnweb.com', port=443): Max retries exceeded with url: /search (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0x7f13c2bdfd70>, 'Connection to testphp.vulnweb.com timed out. (connect timeout=5)'))"
+                    }
+                ]
+            },
+            "dependency": {
+                "vulnerabilities": [],
+                "summary": "Safety scan failed: Command '['safety', 'check', '--json', '--file', 'https://testphp.vulnweb.com/requirements.txt']' returned non-zero exit status 2."
+            },
+            "session": {
+                "error": "HTTPSConnectionPool(host='testphp.vulnweb.com', port=443): Max retries exceeded with url: / (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0x7f13c2bdf9e0>, 'Connection to testphp.vulnweb.com timed out. (connect timeout=None)'))",
+                "summary": "No summary available"
+            }
+        }
     }
 ]
