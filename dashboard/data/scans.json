@@ -48,5 +48,105 @@
                 "summary": "Session check completed (stub)"
             }
         }
+    },
+    {
+        "timestamp": "2025-10-08T11:58:12.525832",
+        "results": {
+            "sast": {
+                "vulnerabilities": [],
+                "summary": "Bandit scan completed (stub)"
+            },
+            "dast": {
+                "vulnerabilities": [],
+                "summary": "ZAP scan completed (stub)"
+            },
+            "api_fuzz": {
+                "issues": [],
+                "summary": "API fuzzing completed (stub)"
+            },
+            "dependency": {
+                "vulnerable_libraries": [],
+                "summary": "Dependency check completed (stub)"
+            },
+            "session": {
+                "session_issues": [],
+                "summary": "Session check completed (stub)"
+            }
+        }
+    },
+    {
+        "timestamp": "2025-10-08T12:04:17.838932",
+        "results": {
+            "sast": {
+                "vulnerabilities": [],
+                "summary": "Bandit scan completed (stub) on https://example.com"
+            },
+            "dast": {
+                "vulnerabilities": [],
+                "summary": "ZAP scan completed (stub) on https://example.com"
+            },
+            "api_fuzz": {
+                "vulnerabilities": [],
+                "summary": "API fuzzing completed (stub) on https://example.com"
+            },
+            "dependency": {
+                "vulnerable_libraries": [],
+                "summary": "Dependency check completed (stub) for https://example.com"
+            },
+            "session": {
+                "session_issues": [],
+                "summary": "Session check completed (stub) on https://example.com"
+            }
+        }
+    },
+    {
+        "timestamp": "2025-10-08T12:07:06.062159",
+        "results": {
+            "sast": {
+                "vulnerabilities": [],
+                "summary": "Bandit scan completed (stub) on https://testphp.vulnweb.com"
+            },
+            "dast": {
+                "vulnerabilities": [],
+                "summary": "ZAP scan completed (stub) on https://testphp.vulnweb.com"
+            },
+            "api_fuzz": {
+                "vulnerabilities": [],
+                "summary": "API fuzzing completed (stub) on https://testphp.vulnweb.com"
+            },
+            "dependency": {
+                "vulnerable_libraries": [],
+                "summary": "Dependency check completed (stub) for https://testphp.vulnweb.com"
+            },
+            "session": {
+                "session_issues": [],
+                "summary": "Session check completed (stub) on https://testphp.vulnweb.com"
+            }
+        }
+    },
+    {
+        "timestamp": "2025-10-08T12:08:34.388847",
+        "results": {
+            "sast": {
+                "vulnerabilities": [],
+                "summary": "Bandit scan completed (stub) on https://testphp.vulnweb.com"
+            },
+            "dast": {
+                "vulnerabilities": [],
+                "summary": "ZAP scan completed (stub) on https://testphp.vulnweb.com"
+            },
+            "api_fuzz": {
+                "vulnerabilities": [],
+                "summary": "API fuzzing completed (stub) on https://testphp.vulnweb.com"
+            },
+            "dependency": {
+                "vulnerable_libraries": [],
+                "summary": "Dependency check completed (stub) for https://testphp.vulnweb.com"
+            },
+            "session": {
+                "session_issues": [],
+                "summary": "Session check completed (stub) on https://testphp.vulnweb.com"
+            }
+        }
     }
 ]
