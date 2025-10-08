@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OWASP Security Dashboard - Advanced</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; }
+        th { background-color: #333; color: white; }
+    </style>
+</head>
+<body>
+    <h1>OWASP Security Dashboard - Advanced</h1>
+
+    <h2>Severity Trends Over Time</h2>
+    <canvas id="severityTrend" width="800" height="300"></canvas>
+
+    <h2>OWASP Category Coverage</h2>
+    <canvas id="owaspCoverage" width="800" height="300"></canvas>
+
+    <h2>Scan History</h2>
+    <table>
+        <tr><th>Timestamp</th><th>Vulnerabilities (High / Medium / Low)</th></tr>
+        
+        <tr>
+            <td>2025-10-08T10:59:32.931737</td>
+            <td>
+                
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                0 / 0 / 0
+            </td>
+        </tr>
+        
+        <tr>
+            <td>2025-10-08T11:07:10.468031</td>
+            <td>
+                
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                0 / 0 / 0
+            </td>
+        </tr>
+        
+    </table>
+
+    <script>
+        // Severity Trends
+        const trendLabels = ['2025-10-08T10:59:32.931737', '2025-10-08T11:07:10.468031'];
+        const highData = [0, 0];
+        const mediumData = [0, 0];
+        const lowData = [0, 0];
+
+        new Chart(document.getElementById('severityTrend'), {
+            type: 'line',
+            data: {
+                labels: trendLabels,
+                datasets: [
+                    { label: 'High', data: highData, borderColor: 'red', fill: false },
+                    { label: 'Medium', data: mediumData, borderColor: 'orange', fill: false },
+                    { label: 'Low', data: lowData, borderColor: 'green', fill: false }
+                ]
+            },
+            options: { responsive: true }
+        });
+
+        // OWASP Coverage
+        const owaspLabels = ['sast', 'dast', 'api_fuzz', 'dependency', 'session'];
+        const owaspData = [0, 0, 0, 0, 0];
+
+        new Chart(document.getElementById('owaspCoverage'), {
+            type: 'bar',
+            data: {
+                labels: owaspLabels,
+                datasets: [{
+                    label: 'Vulnerabilities Found',
+                    data: owaspData,
+                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: { responsive: true, indexAxis: 'y' }
+        });
+    </script>
+</body>
+</html>

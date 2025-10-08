@@ -1,0 +1,8 @@
+jinja2             # For HTML dashboard templating
+pyyaml             # For reading config/settings.yaml
+requests           # For making HTTP requests in scanners
+bandit             # For SAST (static code analysis)
+python-nmap        # If you want to run network scanning from Python
+pytest             # Optional, for testing your modules
+tqdm               # Optional, for progress bars during scans
+
