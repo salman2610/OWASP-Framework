@@ -1,46 +1,78 @@
+#!/usr/bin/env python3
+
+import argparse
+import yaml
+import webbrowser
+from colorama import init, Fore, Style
+
+# Initialize colorama
+init(autoreset=True)
+
+# Import your scanners and utilities
 from scanners.dast import zap_scan, api_fuzzer
 from scanners.sast import bandit_scan
 from scanners.dependency import dependency_check
 from session_analysis import session_checker
 from reports.generate_report import generate_report
 from dashboard import dashboard_advanced as dashboard
-import yaml
 
-
-# Load config
+# Load default config
 with open("config/settings.yaml") as f:
-    config = yaml.safe_load(f)
+    default_config = yaml.safe_load(f)
 
-
-def run_scans():
+def run_scans(target_url, report_format):
     results = {}
 
-    if "sast" in config["scan_types"]:
-        results["sast"] = bandit_scan.run(config["target_url"])
+    print(Fore.CYAN + "[*] Starting OWASP scans on target:", target_url)
 
-    if "dast" in config["scan_types"]:
-        results["dast"] = zap_scan.run(config["target_url"])
-        results["api_fuzz"] = api_fuzzer.run(config["target_url"])
+    # SAST
+    if "sast" in default_config["scan_types"]:
+        print(Fore.YELLOW + "[SAST] Running Bandit scan...")
+        results["sast"] = bandit_scan.run(target_url)
+        print(Fore.GREEN + "[SAST ✅] Done")
 
-    if "dependency" in config["scan_types"]:
-        results["dependency"] = dependency_check.run(config["target_url"])
+    # DAST
+    if "dast" in default_config["scan_types"]:
+        print(Fore.YELLOW + "[DAST] Running ZAP scan...")
+        results["dast"] = zap_scan.run(target_url)
+        print(Fore.GREEN + "[DAST ✅] Done")
 
-    if config.get("session", {}).get("check_jwt"):
-        results["session"] = session_checker.run(config["target_url"])
+        print(Fore.YELLOW + "[DAST] Running API fuzzing...")
+        results["api_fuzz"] = api_fuzzer.run(target_url)
+        print(Fore.GREEN + "[API Fuzz ✅] Done")
+
+    # Dependency
+    if "dependency" in default_config["scan_types"]:
+        print(Fore.YELLOW + "[Dependency] Checking dependencies...")
+        results["dependency"] = dependency_check.run(target_url)
+        print(Fore.GREEN + "[Dependency ✅] Done")
+
+    # Session
+    if default_config.get("session", {}).get("check_jwt"):
+        print(Fore.YELLOW + "[Session] Checking session management...")
+        results["session"] = session_checker.run(target_url)
+        print(Fore.GREEN + "[Session ✅] Done")
 
     # Generate report
-    generate_report(results, config["report"]["format"])
+    print(Fore.CYAN + "[Report] Generating report...")
+    generate_report(results, report_format)
+    print(Fore.GREEN + f"[Report ✅] {report_format.upper()} report generated")
+
+    # Update dashboard
+    dashboard.add_scan(results)
+    dashboard.generate_dashboard()
+    print(Fore.GREEN + "[Dashboard ✅] Advanced dashboard generated")
+
+    # Auto-open HTML report if HTML selected
+    if report_format.lower() == "html":
+        webbrowser.open("reports/latest_report.html")
 
     return results
 
-
 if __name__ == "__main__":
-    # Run all scans
-    results = run_scans()
+    parser = argparse.ArgumentParser(description="OWASP Top 10 Automated Scanning Framework")
+    parser.add_argument("--target", type=str, help="Target URL to scan", default=default_config["target_url"])
+    parser.add_argument("--report", type=str, choices=["html", "json"], help="Report format", default=default_config["report"]["format"])
+    args = parser.parse_args()
 
-    # Save scan to dashboard history
-    dashboard.add_scan(results)
-
-    # Generate HTML dashboard
-    dashboard.generate_dashboard()
-
+    run_scans(args.target, args.report)
