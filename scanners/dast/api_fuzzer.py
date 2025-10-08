@@ -1,9 +1,8 @@
 def run(target_url):
     """
     Stub for API fuzzing.
-    Replace with actual payload testing.
+    Uses the passed target_url parameter.
     """
     print(f"[DAST] Running API fuzzing on {target_url}...")
     # TODO: Implement API fuzzing logic
-    return {"issues": [], "summary": "API fuzzing completed (stub)"}
-
+    return {"vulnerabilities": [], "summary": f"API fuzzing completed (stub) on {target_url}"}
