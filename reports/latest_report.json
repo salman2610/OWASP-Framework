@@ -1,25 +1,35 @@
 {
-    "target": "https://testphp.vulnweb.com",
-    "results": {
-        "sast": {
-            "vulnerabilities": [],
-            "summary": "Bandit scan completed (stub) on https://testphp.vulnweb.com"
-        },
-        "dast": {
-            "vulnerabilities": [],
-            "summary": "ZAP scan completed (stub) on https://testphp.vulnweb.com"
-        },
-        "api_fuzz": {
-            "vulnerabilities": [],
-            "summary": "API fuzzing completed (stub) on https://testphp.vulnweb.com"
-        },
-        "dependency": {
-            "vulnerable_libraries": [],
-            "summary": "Dependency check completed (stub) for https://testphp.vulnweb.com"
-        },
-        "session": {
-            "session_issues": [],
-            "summary": "Session check completed (stub) on https://testphp.vulnweb.com"
-        }
+    "sast": {
+        "vulnerabilities": [],
+        "summary": "Bandit found 0 issues."
+    },
+    "dast": {
+        "vulnerabilities": [],
+        "summary": "Active scan did not complete cleanly"
+    },
+    "api_fuzz": {
+        "summary": "3 items found",
+        "details": [
+            {
+                "endpoint": "/login",
+                "error": "HTTPSConnectionPool(host='testphp.vulnweb.com', port=443): Max retries exceeded with url: /login (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0x78ebaf6ea060>, 'Connection to testphp.vulnweb.com timed out. (connect timeout=5)'))"
+            },
+            {
+                "endpoint": "/register",
+                "error": "HTTPSConnectionPool(host='testphp.vulnweb.com', port=443): Max retries exceeded with url: /register (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0x78ebafbded50>, 'Connection to testphp.vulnweb.com timed out. (connect timeout=5)'))"
+            },
+            {
+                "endpoint": "/search",
+                "error": "HTTPSConnectionPool(host='testphp.vulnweb.com', port=443): Max retries exceeded with url: /search (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0x78ebaf84ee70>, 'Connection to testphp.vulnweb.com timed out. (connect timeout=5)'))"
+            }
+        ]
+    },
+    "dependency": {
+        "vulnerabilities": [],
+        "summary": "Safety scan failed: Command '['safety', 'check', '--json', '--file', 'https://testphp.vulnweb.com/requirements.txt']' returned non-zero exit status 2."
+    },
+    "session": {
+        "issues": [],
+        "summary": "Session check completed on https://testphp.vulnweb.com"
     }
 }

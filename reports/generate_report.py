@@ -1,35 +1,20 @@
 import json
-import os
+from datetime import datetime
 
-def generate_report(results, formats):
+def generate_report(results, report_format):
     """
-    Generates security reports in JSON/HTML.
+    Generate JSON or HTML reports from scan results.
     """
-    summary = {
-        "target": None,
-        "results": results
-    }
+    if isinstance(report_format, str):
+        formats = [report_format]
+    else:
+        formats = report_format
 
-    # attempt to extract target from any scanner summary if present
-    # (stubs include target in summary)
-    for k,v in results.items():
-        s = v.get("summary")
-        if s and " on " in s:
-            # crude parse: last word after 'on '
-            target = s.split(" on ",1)[1]
-            summary["target"] = target
-            break
-
-    if "json" in formats:
-        os.makedirs("reports", exist_ok=True)
-        with open("reports/latest_report.json", "w") as f:
-            json.dump(summary, f, indent=4)
-        print("[Report] JSON report generated at reports/latest_report.json")
-    
-    if "html" in formats:
-        os.makedirs("reports", exist_ok=True)
-        html_content = "<html><body><h1>Security Report (Stub)</h1>"
-        html_content += f"<p>Target: {summary.get('target')}</p><pre>{json.dumps(results, indent=4)}</pre></body></html>"
-        with open("reports/latest_report.html", "w") as f:
-            f.write(html_content)
-        print("[Report] HTML report generated at reports/latest_report.html")
+    for fmt in formats:
+        if fmt.lower() == "json":
+            with open("reports/latest_report.json", "w") as f:
+                json.dump(results, f, indent=4)
+        elif fmt.lower() == "html":
+            # generate simple HTML report
+            with open("reports/latest_report.html", "w") as f:
+                f.write("<html><body><h1>Scan Report</h1></body></html>")
