@@ -287,5 +287,43 @@
                 "summary": "Session check completed on https://testphp.vulnweb.com"
             }
         }
+    },
+    {
+        "timestamp": "2025-10-09T04:51:43.245664",
+        "results": {
+            "sast": {
+                "vulnerabilities": [],
+                "summary": "Bandit found 0 issues."
+            },
+            "dast": {
+                "vulnerabilities": [],
+                "summary": "Active scan did not complete cleanly"
+            },
+            "api_fuzz": {
+                "summary": "3 items found",
+                "details": [
+                    {
+                        "endpoint": "/login",
+                        "error": "HTTPSConnectionPool(host='testphp.vulnweb.com', port=443): Max retries exceeded with url: /login (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0x76fb77a7f5c0>, 'Connection to testphp.vulnweb.com timed out. (connect timeout=5)'))"
+                    },
+                    {
+                        "endpoint": "/register",
+                        "error": "HTTPSConnectionPool(host='testphp.vulnweb.com', port=443): Max retries exceeded with url: /register (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0x76fb77a7fe60>, 'Connection to testphp.vulnweb.com timed out. (connect timeout=5)'))"
+                    },
+                    {
+                        "endpoint": "/search",
+                        "error": "HTTPSConnectionPool(host='testphp.vulnweb.com', port=443): Max retries exceeded with url: /search (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0x76fb778bc860>, 'Connection to testphp.vulnweb.com timed out. (connect timeout=5)'))"
+                    }
+                ]
+            },
+            "dependency": {
+                "vulnerabilities": [],
+                "summary": "Safety scan failed: Command '['safety', 'check', '--json', '--file', 'https://testphp.vulnweb.com/requirements.txt']' returned non-zero exit status 2."
+            },
+            "session": {
+                "issues": [],
+                "summary": "Session check completed on https://testphp.vulnweb.com"
+            }
+        }
     }
 ]
