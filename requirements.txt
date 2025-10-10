@@ -19,3 +19,6 @@ rich==14.1.0
 stevedore==5.5.0
 tqdm==4.67.1
 urllib3==2.5.0
+bandit
+safety
+python-owasp-zapv2

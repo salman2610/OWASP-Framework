@@ -1,16 +1,20 @@
-target_url: "https://example.com"
+target_url: "https://testphp.vulnweb.com"
+
 scan_types:
-  - dast
   - sast
+  - dast
   - dependency
-auth:
-  username: "tester"
-  password: "password123"
+  - nuclei
+  - nmap
+
+report:
+  format: ["json","html"]
+
 session:
   check_jwt: true
-  check_cookie_flags: true
-report:
-  format: ["html", "json"]
-ci_cd:
-  notify_slack: true
-  fail_on_high_severity: true
+
+nuclei:
+  templates: null  # optional: path to custom templates or comma-separated templates
+
+nmap:
+  fast: true

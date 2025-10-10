@@ -1,91 +1,207 @@
+#!/usr/bin/env python3
+"""
+scanners/dast/zap_scan.py
+
+Robust wrapper around OWASP ZAP API (python-owasp-zapv2).
+- attempts to start local zap daemon if not already running (using /snap/bin/zaproxy)
+- spider the target, then active-scan
+- returns structured alerts list and a summary
+Return shape:
+{
+  "alerts": [ { "alert":..., "risk":..., "url":..., ... }, ... ],
+  "summary": "ZAP scan completed: N alerts",
+}
+"""
+from shutil import which
 import subprocess
 import time
 import os
-from zapv2 import ZAPv2
 
-ZAP_PATH = "/snap/bin/zaproxy"
-ZAP_PORT = 8090
-ZAP_START_TIMEOUT = 30
-POLL_INTERVAL = 2
+ZAP_BIN = "/snap/bin/zaproxy"  # change if you prefer a different path
+ZAP_API_ADDR = "127.0.0.1"
+ZAP_API_PORT = 8090
+ZAP_API_PROXY = f"http://{ZAP_API_ADDR}:{ZAP_API_PORT}"
+ZAP_START_WAIT = 8  # seconds to wait after starting zap
+ZAP_POLL_INTERVAL = 2
+ZAP_SPIDER_TIMEOUT = 180
+ZAP_ASCAN_TIMEOUT = 900
 
-def _is_numeric(s):
+def _try_start_zap():
+    """
+    Try to start ZAP daemon if possible (non-blocking, best-effort).
+    Returns True if a process was started or ZAP already present.
+    """
+    # If zap binary not present at snap path, skip starting
+    if not os.path.exists(ZAP_BIN):
+        return False
+
+    # check if port is already listening by trying a curl
     try:
-        int(s)
+        import urllib.request
+        urllib.request.urlopen(f"http://{ZAP_API_ADDR}:{ZAP_API_PORT}/", timeout=2)
+        return True
+    except Exception:
+        pass
+
+    # start zap in daemon mode
+    try:
+        subprocess.Popen([ZAP_BIN, "-daemon", "-port", str(ZAP_API_PORT), "-host", ZAP_API_ADDR, "-config", "api.disablekey=true"],
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        time.sleep(ZAP_START_WAIT)
         return True
     except Exception:
         return False
 
-def _wait_for_zap_api(zap, timeout=ZAP_START_TIMEOUT):
-    deadline = time.time() + timeout
-    while time.time() < deadline:
-        try:
-            _ = zap.core.version
-            return True
-        except Exception:
-            time.sleep(1)
-    return False
-
-def _safe_status_int(zap, kind, scan_id):
-    try:
-        if kind == "spider":
-            s = zap.spider.status(scan_id)
-        else:
-            s = zap.ascan.status(scan_id)
-        if _is_numeric(s):
-            return int(s)
-        return None
-    except Exception:
-        return None
-
-def wait_for_complete(zap, scan_type, scan_id, timeout=600):
-    start = time.time()
-    while time.time() - start < timeout:
-        progress = _safe_status_int(zap, scan_type, scan_id)
-        if progress is None:
-            print(f"[DAST] Warning: {scan_type} status for id {scan_id} returned non-numeric value.")
-            return False
-        print(f"[DAST] {scan_type.capitalize()} progress: {progress}%", end="\r")
-        if progress >= 100:
-            print()
-            return True
-        time.sleep(POLL_INTERVAL)
-    print()
-    print(f"[DAST] {scan_type} timed out after {timeout} seconds")
-    return False
-
 def run(target_url):
+    """
+    Run spider + active scan on target_url and return alerts list.
+    """
     print(f"[DAST] Running ZAP scan on {target_url}...")
-    alerts = []
-    summary = ""
-    zap_process = None
+
+    # lazy import so module import doesn't fail if zapv2 not installed
     try:
-        if not os.path.exists(ZAP_PATH):
-            raise FileNotFoundError(f"ZAP binary not found at {ZAP_PATH}")
-        zap_process = subprocess.Popen([ZAP_PATH, "-daemon", "-port", str(ZAP_PORT), "-host", "127.0.0.1"],
-                                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        print("[DAST] ZAP daemon starting...")
-        zap = ZAPv2(proxies={"http": f"http://127.0.0.1:{ZAP_PORT}", "https": f"http://127.0.0.1:{ZAP_PORT}"})
-        if not _wait_for_zap_api(zap, timeout=ZAP_START_TIMEOUT):
-            raise RuntimeError("ZAP API did not become ready within timeout")
-        spider_id = zap.spider.scan(target_url)
-        print("[DAST] Spidering target...")
-        if not wait_for_complete(zap, "spider", spider_id):
-            raise RuntimeError("Spider did not complete successfully or returned invalid status")
-        ascan_id = zap.ascan.scan(target_url)
-        print("[DAST] Running active scan...")
-        if not wait_for_complete(zap, "ascan", ascan_id, timeout=1800):
-            print("[DAST] Active scan did not complete cleanly")
-            summary = "Active scan did not complete cleanly"
-        alerts = zap.core.alerts(baseurl=target_url)
-        summary = summary or f"ZAP found {len(alerts)} alerts"
-        print(f"[DAST ✅] ZAP scan completed: {len(alerts)} alerts")
+        from zapv2 import ZAPv2
     except Exception as e:
-        summary = f"ZAP scan failed: {e}"
-        print(f"[DAST ❌] {summary}")
-    finally:
+        msg = f"python zap api (zapv2) not installed or import error: {e}"
+        print(f"[DAST ❌] {msg}")
+        return {"alerts": [], "summary": msg}
+
+    # ensure zap is running / start it if possible
+    _try_start_zap()
+
+    # create zap api client
+    try:
+        zap = ZAPv2(proxies={"http": ZAP_API_PROXY, "https": ZAP_API_PROXY})
+    except Exception as e:
+        msg = f"Could not create ZAP client: {e}"
+        print(f"[DAST ❌] {msg}")
+        return {"alerts": [], "summary": msg}
+
+    # sanity check API availability
+    try:
+        ver = zap.core.version
+        print(f"[DAST] ZAP API version: {ver}")
+    except Exception as e:
+        msg = f"ZAP API not reachable at {ZAP_API_PROXY}: {e}"
+        print(f"[DAST ❌] {msg}")
+        return {"alerts": [], "summary": msg}
+
+    alerts = []
+    try:
+        # Ensure target is visited by ZAP: open URL
         try:
-            if zap_process:
-                zap_process.terminate()
+            zap.urlopen(target_url)
+            time.sleep(1)
         except Exception:
             pass
-    return {"vulnerabilities": alerts, "summary": summary}
+
+        # Spider
+        print("[DAST] Spidering target...")
+        try:
+            sid = zap.spider.scan(target_url)
+        except Exception as e:
+            # older/newer versions might return differently
+            try:
+                sid = zap.spider.scan(target_url, maxChildren=None)
+            except Exception as e2:
+                print(f"[DAST] Spider start error: {e2}")
+                sid = None
+
+        # wait for spider to finish
+        if sid is not None:
+            t_start = time.time()
+            while True:
+                try:
+                    status = zap.spider.status(sid)
+                except Exception:
+                    # sometimes status returns string or raises; try safe access
+                    try:
+                        status = zap.spider.status(sid)
+                    except Exception:
+                        status = "100"
+                # status might be a string number
+                try:
+                    if str(status).isdigit() and int(status) >= 100:
+                        break
+                except Exception:
+                    pass
+                if time.time() - t_start > ZAP_SPIDER_TIMEOUT:
+                    print("[DAST] Spider timeout reached")
+                    break
+                print(f"[DAST] Spider progress: {status}%")
+                time.sleep(ZAP_POLL_INTERVAL)
+        else:
+            print("[DAST] Spider was not started (sid None)")
+
+        # Active scan
+        print("[DAST] Running active scan...")
+        try:
+            asid = zap.ascan.scan(target_url)
+        except Exception as e:
+            try:
+                asid = zap.ascan.scan(target_url, recurse=True, inplace=False)
+            except Exception as e2:
+                print(f"[DAST] Active scan start error: {e2}")
+                asid = None
+
+        if asid is not None:
+            t_start = time.time()
+            while True:
+                try:
+                    astatus = zap.ascan.status(asid)
+                except Exception:
+                    try:
+                        astatus = zap.ascan.status(asid)
+                    except Exception:
+                        astatus = "100"
+                try:
+                    if str(astatus).isdigit() and int(astatus) >= 100:
+                        break
+                except Exception:
+                    pass
+                if time.time() - t_start > ZAP_ASCAN_TIMEOUT:
+                    print("[DAST] Active scan timeout reached")
+                    break
+                print(f"[DAST] Ascan progress: {astatus}%")
+                time.sleep(ZAP_POLL_INTERVAL)
+        else:
+            print("[DAST] Active scan not started (asid None)")
+
+        # gather alerts
+        try:
+            raw_alerts = zap.core.alerts(baseurl=target_url)
+        except TypeError:
+            # some versions have different signature
+            raw_alerts = zap.core.alerts()
+        except Exception as e:
+            print(f"[DAST] Error fetching alerts: {e}")
+            raw_alerts = []
+
+        # Normalize each alert into a friendly dict
+        for a in raw_alerts or []:
+            try:
+                alerts.append({
+                    "alert": a.get("alert") or a.get("name") or "",
+                    "risk": a.get("risk") or a.get("riskdesc") or "",
+                    "confidence": a.get("confidence", ""),
+                    "url": a.get("url", "") or a.get("uri", ""),
+                    "param": a.get("param", ""),
+                    "evidence": a.get("evidence", ""),
+                    "cweid": a.get("cweid", ""),
+                    "wascid": a.get("wascid", ""),
+                    "solution": a.get("solution", ""),
+                    "reference": a.get("reference", ""),
+                    "pluginid": a.get("pluginId") or a.get("pluginid") or "",
+                    "other": a
+                })
+            except Exception:
+                # fallback: add raw item
+                alerts.append({"raw": a})
+
+    except Exception as e:
+        print(f"[DAST ❌] ZAP scan failed: {e}")
+        return {"alerts": [], "summary": f"ZAP scan failed: {e}"}
+
+    summary = f"ZAP scan completed: {len(alerts)} alerts"
+    print(f"[DAST ✅] {summary}")
+    return {"alerts": alerts, "summary": summary}

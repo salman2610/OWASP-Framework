@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE nmaprun>
+<?xml-stylesheet href="file:///usr/bin/../share/nmap/nmap.xsl" type="text/xsl"?>
+<!-- Nmap 7.94SVN scan initiated Fri Oct 10 15:58:50 2025 as: nmap -p- -T4 -sV -&#45;version-all -&#45;script=banner,ssl-cert -oA recon/nmap-full -Pn 94.237.51.21 -->
+<nmaprun scanner="nmap" args="nmap -p- -T4 -sV -&#45;version-all -&#45;script=banner,ssl-cert -oA recon/nmap-full -Pn 94.237.51.21" start="1760092130" startstr="Fri Oct 10 15:58:50 2025" version="7.94SVN" xmloutputversion="1.05">
+<scaninfo type="syn" protocol="tcp" numservices="65535" services="1-65535"/>
