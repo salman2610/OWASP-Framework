@@ -1,0 +1,136 @@
+#!/usr/bin/env python3
+import os
+import sys
+import json
+import datetime
+import importlib
+import subprocess
+
+# -----------------------
+# CONFIGURATION
+# -----------------------
+MODULES = [
+    "modules.nikto_scan",
+    "modules.sast",
+    "modules.dast",
+    "modules.nmap_scan",
+    "modules.session",
+    "modules.dependency",
+    "modules.nuclei",
+]
+
+REPORT_DIR = "reports"
+DASHBOARD_FILE = os.path.join(REPORT_DIR, "dashboard_data.json")
+
+
+# -----------------------
+# UTILITY FUNCTIONS
+# -----------------------
+
+def safe_result(result):
+    """Ensure each scan result has the required fields."""
+    if not isinstance(result, dict):
+        result = {"summary": str(result), "details": []}
+    if "summary" not in result:
+        result["summary"] = "No summary provided"
+    if "details" not in result:
+        result["details"] = []
+    return result
+
+
+def load_module(module_name):
+    try:
+        return importlib.import_module(module_name)
+    except Exception as e:
+        print(f"[ERROR] Could not load module {module_name}: {e}")
+        return None
+
+
+def run_module(module, target):
+    """Run a scan module safely and normalize output."""
+    try:
+        if hasattr(module, "run"):
+            result = module.run(target)
+            return safe_result(result)
+        else:
+            return safe_result({"summary": f"{module.__name__} has no run() method."})
+    except Exception as e:
+        return safe_result({"summary": f"Error running {module.__name__}", "details": [{"title": str(e), "severity": "error"}]})
+
+
+def generate_report(scan_results):
+    """Generate combined HTML + JSON report files."""
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    os.makedirs(REPORT_DIR, exist_ok=True)
+
+    json_report_path = os.path.join(REPORT_DIR, "debug_scan_output.json")
+    html_report_path = os.path.join(REPORT_DIR, "owasp_report.html")
+
+    with open(json_report_path, "w") as jf:
+        json.dump(scan_results, jf, indent=4)
+
+    print("[DEBUG] wrote", json_report_path)
+
+    html = [
+        f"<html><head><title>OWASP Framework Report</title></head><body>",
+        f"<h1>OWASP Framework Report</h1><p>Generated: {timestamp}</p>",
+    ]
+    for result in scan_results:
+        html.append(f"<h2>{result['summary']}</h2><ul>")
+        for d in result["details"]:
+            html.append(f"<li><b>{d.get('severity','info').upper()}</b> - {d.get('title','No title')}</li>")
+        html.append("</ul>")
+    html.append("</body></html>")
+
+    with open(html_report_path, "w") as hf:
+        hf.write("\n".join(html))
+
+    print("[Report ✅] HTML report generated")
+    return html_report_path
+
+
+def update_dashboard(scan_results):
+    """Update dashboard data file used by Flask dashboard."""
+    try:
+        os.makedirs(REPORT_DIR, exist_ok=True)
+        with open(DASHBOARD_FILE, "w") as f:
+            json.dump(scan_results, f, indent=4)
+        print("[Dashboard ✅] Dashboard updated successfully.")
+    except Exception as e:
+        print(f"[Dashboard ❌] Could not update dashboard: {e}")
+
+
+# -----------------------
+# MAIN EXECUTION
+# -----------------------
+
+def main():
+    if len(sys.argv) < 2:
+        print("Usage: python3 main.py <target_url>")
+        sys.exit(1)
+
+    target = sys.argv[1]
+    print(f"[*] Starting OWASP scans on target: {target}")
+
+    scan_results = []
+
+    for mod_name in MODULES:
+        print(f"[+] Running module: {mod_name}")
+        module = load_module(mod_name)
+        if not module:
+            continue
+        result = run_module(module, target)
+        scan_results.append(result)
+
+    # Debug check for missing fields
+    for res in scan_results:
+        if "details" not in res:
+            print(f"[DEBUG] Missing details in: {res}")
+
+    # Write report + update dashboard
+    generate_report(scan_results)
+    update_dashboard(scan_results)
+
+
+if __name__ == "__main__":
+    main()

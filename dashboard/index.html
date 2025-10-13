@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OWASP Framework Dashboard</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- jsPDF for PDF download -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="bg-gray-900 text-gray-100 min-h-screen flex flex-col">
+  <!-- Navbar -->
+  <nav class="bg-gray-800 shadow-lg p-4 flex justify-between items-center">
+    <h1 class="text-2xl font-bold text-blue-400">OWASP Framework Dashboard</h1>
+    <button id="downloadPDF" class="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg">Download PDF</button>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="flex-grow container mx-auto p-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+      <!-- Card 1 -->
+      <div class="bg-gray-800 rounded-xl p-6 shadow-lg">
+        <h2 class="text-xl font-semibold mb-4 text-blue-300">Scan Summary</h2>
+        <ul class="space-y-2">
+          <li><strong>Total Scans:</strong> 12</li>
+          <li><strong>Critical:</strong> 2</li>
+          <li><strong>High:</strong> 4</li>
+          <li><strong>Medium:</strong> 3</li>
+          <li><strong>Low:</strong> 3</li>
+        </ul>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="bg-gray-800 rounded-xl p-6 shadow-lg">
+        <h2 class="text-xl font-semibold mb-4 text-green-300">Scan Status</h2>
+        <canvas id="statusChart"></canvas>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="bg-gray-800 rounded-xl p-6 shadow-lg">
+        <h2 class="text-xl font-semibold mb-4 text-yellow-300">Vulnerability Severity</h2>
+        <canvas id="severityChart"></canvas>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="bg-gray-800 text-center py-4 text-gray-400">
+    © 2025 OWASP Framework | Built by Salmanul Faris 😎
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

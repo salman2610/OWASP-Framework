@@ -26,20 +26,34 @@ def add_scan(results):
     })
     save_history(history)
 
+def normalize_for_dashboard(scan):
+    """Ensure every scanner result has 'summary' and 'details' keys."""
+    normalized = {}
+    for k, v in scan.items():
+        if not isinstance(v, dict):
+            normalized[k] = {"summary": str(v), "details": []}
+            continue
+        summary = v.get("summary", str(v))
+        details = v.get("details", [])
+        if details is None:
+            details = []
+        normalized[k] = {"summary": summary, "details": details}
+    return normalized
+
 def generate_dashboard():
     history = load_history()
 
-    # Compute severity trends over time
     trend_data = []
     for scan in history:
         counts = {"high":0, "medium":0, "low":0}
-        for k, v in scan["results"].items():
-            for vuln in v.get("vulnerabilities", []):
-                severity = vuln.get("severity", "low").lower()
+        normalized_results = normalize_for_dashboard(scan.get("results", {}))
+        for scanner_name, data in normalized_results.items():
+            for vuln in data.get("details", []):
+                severity = vuln.get("severity", "low").lower() if isinstance(vuln, dict) else "low"
                 if severity in counts:
                     counts[severity] += 1
         trend_data.append({
-            "timestamp": scan["timestamp"],
+            "timestamp": scan.get("timestamp", ""),
             "high": counts["high"],
             "medium": counts["medium"],
             "low": counts["low"]
@@ -48,10 +62,9 @@ def generate_dashboard():
     # Compute OWASP Top 10 coverage
     owasp_categories = {}
     for scan in history:
-        for category, data in scan["results"].items():
-            if category not in owasp_categories:
-                owasp_categories[category] = 0
-            owasp_categories[category] += len(data.get("vulnerabilities", []))
+        normalized_results = normalize_for_dashboard(scan.get("results", {}))
+        for category, data in normalized_results.items():
+            owasp_categories[category] = owasp_categories.get(category, 0) + len(data.get("details", []))
 
     # Load template
     env = Environment(loader=FileSystemLoader(os.path.dirname(TEMPLATE_FILE)))
