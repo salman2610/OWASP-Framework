@@ -3,13 +3,16 @@ import os
 from datetime import datetime
 from jinja2 import Environment, FileSystemLoader
 
-SCAN_HISTORY_FILE = "dashboard/data/scans.json"
-TEMPLATE_FILE = "dashboard/templates/dashboard_advanced.html"
-OUTPUT_FILE = "reports/dashboard_advanced.html"
+# Paths used
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+SCAN_HISTORY_FILE = os.path.join(BASE_DIR, "data", "scans.json")
+TEMPLATE_DIR = os.path.join(BASE_DIR, "templates")
+TEMPLATE_FILE = "dashboard_advanced.html"
+OUTPUT_FILE = os.path.join(BASE_DIR, "..", "reports", "dashboard_rendered.html")
 
 def load_history():
     if os.path.exists(SCAN_HISTORY_FILE):
-        with open(SCAN_HISTORY_FILE) as f:
+        with open(SCAN_HISTORY_FILE, "r") as f:
             return json.load(f)
     return []
 
@@ -27,7 +30,6 @@ def add_scan(results):
     save_history(history)
 
 def normalize_for_dashboard(scan):
-    """Ensure every scanner result has 'summary' and 'details' keys."""
     normalized = {}
     for k, v in scan.items():
         if not isinstance(v, dict):
@@ -40,18 +42,27 @@ def normalize_for_dashboard(scan):
         normalized[k] = {"summary": summary, "details": details}
     return normalized
 
-def generate_dashboard():
-    history = load_history()
+def generate_dashboard(scan_results=None):
+    """
+    Generate dashboard HTML.
 
+    If scan_results given, add to history first.
+    """
+    history = load_history()
+    if scan_results:
+        add_scan(scan_results)
+        history = load_history()  # reload after add
+
+    # Gather trend data for charts
     trend_data = []
     for scan in history:
-        counts = {"high":0, "medium":0, "low":0}
+        counts = {"high": 0, "medium": 0, "low": 0}
         normalized_results = normalize_for_dashboard(scan.get("results", {}))
-        for scanner_name, data in normalized_results.items():
+        for _, data in normalized_results.items():
             for vuln in data.get("details", []):
-                severity = vuln.get("severity", "low").lower() if isinstance(vuln, dict) else "low"
-                if severity in counts:
-                    counts[severity] += 1
+                sev = vuln.get("severity", "low").lower() if isinstance(vuln, dict) else "low"
+                if sev in counts:
+                    counts[sev] += 1
         trend_data.append({
             "timestamp": scan.get("timestamp", ""),
             "high": counts["high"],
@@ -59,21 +70,32 @@ def generate_dashboard():
             "low": counts["low"]
         })
 
-    # Compute OWASP Top 10 coverage
+    # Compute categories coverage (e.g., OWASP)
     owasp_categories = {}
     for scan in history:
         normalized_results = normalize_for_dashboard(scan.get("results", {}))
         for category, data in normalized_results.items():
             owasp_categories[category] = owasp_categories.get(category, 0) + len(data.get("details", []))
 
-    # Load template
-    env = Environment(loader=FileSystemLoader(os.path.dirname(TEMPLATE_FILE)))
-    template = env.get_template(os.path.basename(TEMPLATE_FILE))
+    # Latest scan results for display
+    latest_scan = normalize_for_dashboard(history[-1]["results"]) if history else {}
 
-    # Render dashboard
-    html = template.render(trend_data=trend_data, owasp_categories=owasp_categories, history=history)
+    # Setup Jinja2 environment and render
+    env = Environment(loader=FileSystemLoader(TEMPLATE_DIR))
+    template = env.get_template(TEMPLATE_FILE)
+    timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+
+    rendered_html = template.render(
+        scans=latest_scan,
+        history=history,
+        trend_data=trend_data,
+        owasp_categories=owasp_categories,
+        timestamp=timestamp
+    )
+
     os.makedirs(os.path.dirname(OUTPUT_FILE), exist_ok=True)
     with open(OUTPUT_FILE, "w") as f:
-        f.write(html)
+        f.write(rendered_html)
 
     print(f"[Dashboard] Advanced dashboard generated at {OUTPUT_FILE}")
+    return OUTPUT_FILE
