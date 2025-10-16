@@ -16,3 +16,5 @@ Activate virtual environment:
 
 ```bash
 source venv/bin/activate
+'''
+ /snap/bin/zaproxy -daemon -port 8090 -host 127.0.0.1 -config api.disablekey=true
