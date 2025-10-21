@@ -2,8 +2,8 @@
 
 Automated OWASP Top 10 testing framework with:
 
-- SAST (Bandit)
-- DAST (ZAP)
+- SAST (nuclei)
+- DAST (ZAP,Nmap,)
 - API fuzzing
 - Dependency checking
 - Session analysis
